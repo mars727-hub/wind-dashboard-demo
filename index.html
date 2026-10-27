@@ -267,6 +267,21 @@
         .tooltip-label { color: var(--text-secondary); font-weight: 500; }
         .tooltip-val { font-weight: 600; color: var(--text-primary); text-align: right; }
 
+        .data-table tbody tr:focus { outline: 3px solid var(--primary-blue); outline-offset: -3px; }
+        .map-message { padding: 24px; color: var(--text-secondary); }
+        @media (max-width: 700px) {
+            body { display: block; }
+            .sidebar { position: static; width: 100% !important; min-width: 0; max-width: none; height: auto; }
+            .sidebar-content { display: flex; flex-wrap: wrap; gap: 16px; padding: 16px; }
+            .filter-group { flex: 1 1 180px; margin: 0; }
+            .sidebar-footer, .resizer { display: none; }
+            .main-content { padding: 16px; gap: 20px; }
+            .header-section { align-items: flex-start; gap: 16px; }
+            .header-title { font-size: 1.4rem; }
+            .map-wrapper { height: 420px; }
+            .details-header { flex-wrap: wrap; gap: 8px; }
+        }
+
         /* Custom Scrollbar */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f5f9; }
@@ -320,7 +335,7 @@
         <div class="header-section">
             <div>
                 <h1 class="header-title">Global Offshore Wind Farm Dashboard</h1>
-                <p class="header-subtitle">Real-time tracking of capacity, development status, and asset distribution.</p>
+                <p class="header-subtitle">Illustrative project data; statuses and capacities are not live. Verify before use.</p>
             </div>
             <!-- Mock User Profile -->
             <div style="display:flex; align-items:center; gap:12px;">
@@ -338,11 +353,11 @@
         <section class="kpi-container">
             <div class="kpi-card" style="--card-color: #0ea5e9;">
                 <div class="kpi-header">
-                    <span class="kpi-title">Total Capacity</span>
+                    <span class="kpi-title">Listed Capacity</span>
                     <div class="kpi-icon"><i class="fa-solid fa-bolt"></i></div>
                 </div>
                 <div class="kpi-value" id="kpi-capacity">0</div>
-                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Gigawatts (GW)</div>
+                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">GW · includes planned and construction capacity</div>
             </div>
             
             <div class="kpi-card" style="--card-color: #8b5cf6;">
@@ -351,7 +366,7 @@
                     <div class="kpi-icon"><i class="fa-solid fa-industry"></i></div>
                 </div>
                 <div class="kpi-value" id="kpi-count">0</div>
-                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Global Assets</div>
+                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Listed projects</div>
             </div>
             
             <div class="kpi-card" style="--card-color: #10b981;">
@@ -360,7 +375,7 @@
                     <div class="kpi-icon"><i class="fa-solid fa-check-circle"></i></div>
                 </div>
                 <div class="kpi-value" id="kpi-operational">0</div>
-                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Generating Power</div>
+                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Fully operational projects</div>
             </div>
         </section>
 
@@ -497,23 +512,24 @@
         ];
 
         // --- Step 2: Map Initialization ---
-        const defaultView = { lat: 24.65, lng: 120.5, zoom: 11 };
+        const defaultView = { lat: 20, lng: 10, zoom: 2 };
         let map; // Define map globally
 
         // Initialize Map
-        map = L.map('map', {
+        if (typeof L !== 'undefined') map = L.map('map', {
             zoomControl: false 
         }).setView([defaultView.lat, defaultView.lng], defaultView.zoom); 
 
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        if (map) L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
             subdomains: 'abcd',
             maxZoom: 19
         }).addTo(map);
         
-        L.control.zoom({ position: 'bottomright' }).addTo(map);
+        if (map) L.control.zoom({ position: 'bottomright' }).addTo(map);
+        else document.getElementById('map').innerHTML = '<p class="map-message">Map unavailable. Check your connection and reload. The project table remains available.</p>';
 
-        const markersLayer = L.layerGroup().addTo(map);
+        const markersLayer = map ? L.layerGroup().addTo(map) : null;
 
         // --- Step 3: Visualization Helpers ---
         function getColorByStatus(status) {
@@ -533,6 +549,7 @@
 
         // --- Step 4: Core Render Function (Map) ---
         function renderMap(data) {
+            if (!markersLayer) return;
             markersLayer.clearLayers();
 
             data.forEach(farm => {
@@ -565,7 +582,6 @@
                 marker.on('click', function(e) {
                     map.setView(e.latlng, 10); 
                     this.openPopup();
-                    renderTable([farm]); 
                 });
 
                 marker.addTo(markersLayer);
@@ -600,8 +616,12 @@
                     <td style="font-family:'Courier New', monospace; font-size:0.8rem; color:#64748b;">${farm.lat.toFixed(3)}, ${farm.lng.toFixed(3)}</td>
                 `;
                 
-                row.addEventListener('click', () => {
-                   map.setView([farm.lat, farm.lng], 11);
+                row.tabIndex = 0;
+                row.setAttribute('aria-label', `Show ${farm.name} on map`);
+                const showOnMap = () => { if (map) map.setView([farm.lat, farm.lng], 11); };
+                row.addEventListener('click', showOnMap);
+                row.addEventListener('keydown', event => {
+                    if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); showOnMap(); }
                 });
                 
                 tbody.appendChild(row);
@@ -640,10 +660,6 @@
             
             polygon.on('click', function(e) {
                 map.fitBounds(polygon.getBounds()); 
-                const f4Data = rawData.find(d => d.name.includes("Formosa 4"));
-                if (f4Data) {
-                    renderTable([f4Data]);
-                }
             });
 
             polygon.addTo(markersLayer);
@@ -702,6 +718,7 @@
             updateKPIs(filteredData);
             renderTable(filteredData);
 
+            if (!map) return;
             if (countryVal !== 'all') {
                 const bounds = L.latLngBounds(filteredData.map(d => [d.lat, d.lng]));
                 if (bounds.isValid()) {
@@ -714,6 +731,7 @@
 
         // --- Step 6: Legend (English) ---
         function addLegend() {
+            if (!map) return;
             const legend = L.control({position: 'bottomleft'});
             legend.onAdd = function (map) {
                 const div = L.DomUtil.create('div', 'legend');
@@ -747,7 +765,8 @@
             function handleMouseMove(e) {
                 if (!isResizing) return;
                 const newWidth = e.clientX;
-                sidebar.style.width = `${newWidth}px`;
+                sidebar.style.width = `${Math.max(240, Math.min(500, newWidth))}px`;
+                if (map) map.invalidateSize();
             }
 
             function stopResize() {

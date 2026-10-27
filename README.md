@@ -1,8 +1,17 @@
-# wind-dashboard-demo
-####  Global Offshore Wind Farm Dashboard 🌍
-* **Description:** A web-based Single Page Application (SPA) designed to visualize the geographic distribution, capacity, and development status of global offshore wind farms.
-* **👉 [Check out the live demo—it's fully interactive!](https://mars727-hub.github.io/wind-dashboard-demo/)**
-* **Tech:** HTML, JavaScript, Data Visualization
+# Global Offshore Wind Farm Dashboard 🌍
 
-這是一個基於 Web 技術開發的單頁式應用程式 (Single Page Application, SPA)，能夠視覺化全球離岸風電場的地理分佈、產能數據與開發狀態。
-點進去是看看吧!是互動式的喔
+A static, interactive demonstration of selected offshore wind projects. Filter by status and country to update the map, project table and summary cards.
+
+[Open the live demo](https://mars727-hub.github.io/wind-dashboard-demo/)
+
+## Run locally
+
+Open `index.html` in a browser, or serve the directory with `python -m http.server 8000` and visit `http://localhost:8000`. The map, fonts and icons require an internet connection; filtering and the table remain available if the map library cannot load.
+
+## Data limitations
+
+The dataset is embedded in `index.html`. It is a selected, historical demonstration dataset, not a live feed or a complete global inventory. Project locations, statuses, capacity and ownership may be approximate or outdated; verify them against authoritative sources before use. Listed capacity includes planned and construction projects and is not equivalent to operating capacity. The operational count includes only projects labelled fully operational. The Formosa 4 polygon is illustrative and must not be used as an authoritative boundary.
+
+## Interaction
+
+Use the filters to narrow the results. Select a table row with a mouse or keyboard to move the map to that project. Map markers show project details without changing the filtered table. On desktop, drag the sidebar edge to resize it.
