@@ -6,7 +6,7 @@ A static, interactive demonstration of selected offshore wind projects. Filter b
 
 ## Run locally
 
-Open `index.html` in a browser, or serve the directory with `python -m http.server 8000` and visit `http://localhost:8000`. The map, fonts and icons require an internet connection; filtering and the table remain available if the map library cannot load.
+Open `index.html` in a browser, or serve the directory with `python -m http.server 8000` and visit `http://localhost:8000`. The map uses OpenStreetMap standard tiles and does not require an API key. The map, fonts and icons require an internet connection; filtering and the table remain available if the map library cannot load.
 
 ## Data limitations
 
